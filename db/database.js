@@ -80,82 +80,75 @@ function loadItems() {
     });
 }
 
-function generateEncounter(location, apl, mod, msg, include, penalty) {
-	var encounter = [];
+function generateEncounter(location, apl, mod, msg, include) {
+    var encounter = [];
     var list = {};
 
     var cr = apl;
-    if(!mod)
-    {
+    if (!mod) {
         let roll = Math.floor(Math.random() * 4);
-        if(roll == 3)
+        if (roll == 3)
             roll = -1;
-        if(roll == 4)
+        if (roll == 4)
             roll = -2
 
         cr += roll
     }
-    else{
+    else {
         cr += mod
     }
 
-	var xpBudget = getXPForCR(cr);
-	var included;
-	
-	if(include && include != null) {
-		included = monsters[include];
-		if(!included)
-			msg.author.send("Error " + include + " not found in monster database!");
-		if(penalty){ 
-			if(getPenalty(cr - included.cr) * included.xp > xpBudget)
-				msg.author.send("Error : Included monsters XP cost exceeds the total XP budget for a CR " + cr + " encounter");
-			else{
-				encounter.push(included);
-				xpBudget -= included.xp * getPenalty(cr- included.cr);
-			}
-			
-		}
-		else{
-			if(included.xp > xpBudget)
-				msg.author.send("Error : Included monsters XP cost exceeds the total XP budget for a CR " + cr + " encounter");
-			else{
-				encounter.push(included);
-				xpBudget -= included.xp;
-			}
-		}
-	}
-	list = locations[location].monsters.slice();
-	selectMonsterRound(cr, xpBudget, list, encounter, msg, penalty);
-	
-	generateEncounterMessage(cr, encounter, msg, penalty);
-		
+    var xpBudget = getXPForCR(cr);
+    var included;
+
+    if (include && include != null) {
+        included = monsters[include];
+        if (!included)
+            msg.author.send("Error " + include + " not found in monster database!");
+        if (included.xp > xpBudget)
+            msg.author.send("Error : Included monsters XP cost exceeds the total XP budget for a CR " + cr + " encounter");
+        else {
+            encounter.push(included);
+            xpBudget -= included.xp;
+        }
+
+    }
+    list = locations[location].monsters.slice();
+    selectMonsterRound(cr, xpBudget, list, encounter, msg);
+
+    generateEncounterMessage(cr, encounter, msg);
+
 }
 
-function generateEncounterMessage(cr, encounter, msg, penalty) {
+function generateEncounterMessage(cr, encounter, msg) {
     var response = "";
     var monster;
 
 
     response += "****Encounter results*****\n";
-    response += "CR: " + cr + " XP: " + getXPForEncounter(encounter, cr, penalty) + "\n";
-    
+    response += "CR: " + cr + " XP: " + getXPForEncounter(encounter, cr) + "\n";
+
+    encounter.sort(function(a, b){return a.cr > b.cr});
+
     for (var mon in encounter) {
         monster = encounter[mon];
-        if(penalty)
-        response += monster.name + " CR: " + monster.cr + " XP: "  + monster.xp * getPenalty(cr - monster.cr)  + "(" + monster.xp + ")\n";
-        else
         response += monster.name + " CR: " + monster.cr + " XP: " + monster.xp + "\n";
     }
 
-    msg.author.send(response);
+    msg.author.send(quoteMessage(response));
 
+}
+
+function quoteMessage(text) {
+    let resp = "```" + text + "```";
+    return resp;
 }
 
 function getXPForCR(cr) {
     if (cr >= 1) {
-        if(cr == 1)
+        if (cr == 1)
             return cr1XP;
-        if(cr == 2)
+        if (cr == 2)
             return cr2XP;
 
         if (isEven(cr)) {
@@ -181,75 +174,59 @@ function getXPRecursive(cr, cur, xp) {
         return xp;
 }
 
-function getXPForEncounter(encounter, cr, penalty) {
+function getXPForEncounter(encounter, cr) {
     var xp = 0;
     for (var mon in encounter)
-        if(penalty)
-            xp += (encounter[mon].xp * getPenalty(cr - encounter[mon].cr));
-        else
-            xp += encounter[mon].xp;
+        xp += encounter[mon].xp;
+
     return xp;
 }
 
 
-function selectMonsterRound(cr, budget, list, encounter, msg, penalty) {
-	var newList = JSON.parse(JSON.stringify(list));
-	let updatedBudget = budget;
-	
-	console.log("Starting budget is " + updatedBudget + " starting list is "  + newList.length + " : "+ newList);
-	let cut = [];
+function selectMonsterRound(cr, budget, list, encounter, msg) {
+    var newList = JSON.parse(JSON.stringify(list));
+    let updatedBudget = budget;
 
-	for(var monster = 0; monster < newList.length; monster++) {
-		var mon = monsters[newList[monster]];
-		
-		console.log("Cycling to  " + monster + " : "+ mon.name);
-		if(mon == undefined) {
-			console.log("Undefined?");
-			
-			msg.author.send("Monster " + newList[monster] + " not found in database, encounter generation failed");
-			return;
-		}
-		
-		if(!penalty || penalty == false) {
-			if(mon.xp > updatedBudget) {
-				cut.push(newList[monster])
-			}
-		}
-		else{
-			console.log("Monster is " + mon.name + " xp cost is " + mon.xp * getPenalty(cr - mon.cr) + " of budget " + updatedBudget);
-			if((mon.xp * getPenalty(cr - mon.cr)) > updatedBudget || mon.cr > cr) {
-				console.log("Cut " + mon.name);
-				cut.push(newList[monster]);
-			}
-		}
-	}
-	
-	for(var i = 0; i < cut.length; i++)
-		newList.splice(newList.indexOf(cut[i]), 1);
-	
-	if(newList.length == 0)
-		return;
-	
-	newList = shuffle(newList);
-	
-	let pick = Math.floor(Math.random() * newList.length);
-	let selected = monsters[newList[pick]];
-	
-	encounter.push(selected);
-	
-	console.log("adding " + monsters[newList[pick]].name);
-	if(penalty == true){
-		updatedBudget -= (selected.xp * getPenalty(cr - selected.cr));
-		
-	}
-	else{
-		updatedBudget -= (selected.xp);
-	}
-	
-	if(updatedBudget == 0)
-		return;
-	
-	selectMonsterRound(cr, updatedBudget, newList, encounter, msg, penalty);
+    console.log("Starting budget is " + updatedBudget + " starting list is " + newList.length + " : " + newList);
+    let cut = [];
+
+    for (var monster = 0; monster < newList.length; monster++) {
+        var mon = monsters[newList[monster]];
+
+        console.log("Cycling to  " + monster + " : " + mon.name);
+        if (mon == undefined) {
+            console.log("Undefined?");
+
+            msg.author.send("Monster " + newList[monster] + " not found in database, encounter generation failed");
+            return;
+        }
+
+
+        if (mon.xp > updatedBudget) {
+            cut.push(newList[monster])
+        }
+
+
+    }
+
+    for (var i = 0; i < cut.length; i++)
+        newList.splice(newList.indexOf(cut[i]), 1);
+
+    if (newList.length == 0)
+        return;
+
+    newList = shuffle(newList);
+
+    let pick = Math.floor(Math.random() * newList.length);
+    let selected = monsters[newList[pick]];
+
+    encounter.push(selected);
+    updatedBudget -= (selected.xp);
+    
+    if (updatedBudget == 0)
+        return;
+
+    selectMonsterRound(cr, updatedBudget, newList, encounter, msg);
 }
 
 function isEven(number) {
@@ -257,7 +234,7 @@ function isEven(number) {
 }
 
 function shuffle(array) {
-    for(var i = array.length - 1; i >= 0; i--) {
+    for (var i = array.length - 1; i >= 0; i--) {
         let randomIndex = Math.floor(Math.random() * (i + 1));
         let itemAtIndex = array[randomIndex];
 
@@ -268,28 +245,12 @@ function shuffle(array) {
     return array;
 }
 
-function getPenalty(difference)
-{
-    if(difference == 0 || difference == 1)
-        return 1;
-    
-    if(difference > 5)
-    	return .75;
-    
-    if(difference < 0)
-    	return 1;
+function addXTimes(value, times) {
+    let result = 0;
+    for (var i = 0; i < times; i++)
+        result += value;
+    return result;
 
-    let mod = 1 - addXTimes(.05, difference - 1)
-        
-    return mod < .75 ? .75 : mod;
-}
-
-function addXTimes(value, times){
-	let result = 0;
-	for(var i = 0; i < times; i++)
-		result += value;
-	return result;
-		
 }
 
 function getMonster(name, cb) {

@@ -11,7 +11,8 @@ client.on('message', message => {
     if(message.content.charAt(0) === '!')
     {
         if(message.content == "!Generate")
-        db.generateEncounter("Darkmoon Forest", 5, 0,  message, null, true);
+        for(var i = 0; i < 5; i++)
+            db.generateEncounter("Darkmoon Forest", 5, 0,  message, null, true);
     }
 })
 
