@@ -125,10 +125,10 @@ function generateEncounterMessage(cr, encounter, msg) {
     var monster;
 
 
-    response += "****Encounter results*****\n";
+    response += "*****Encounter results*****\n";
     response += "CR: " + cr + " XP: " + getXPForEncounter(encounter, cr) + "\n";
 
-    encounter.sort(function(a, b){return a.cr > b.cr});
+    encounter.sort(function(a, b){return b.cr - a.cr});
 
     for (var mon in encounter) {
         monster = encounter[mon];
