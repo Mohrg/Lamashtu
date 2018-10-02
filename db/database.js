@@ -83,13 +83,14 @@ function loadItems() {
 function generateEncounter(location, apl, mod, msg, include, penalty) {
 	var encounter = [];
     var list = {};
+
     var cr = apl;
     if(!mod)
     {
-        let roll = Math.random(5) + 1
-        if(roll == 4)
+        let roll = Math.floor(Math.random() * 4);
+        if(roll == 3)
             roll = -1;
-        if(roll == 5)
+        if(roll == 4)
             roll = -2
 
         cr += roll
@@ -97,7 +98,7 @@ function generateEncounter(location, apl, mod, msg, include, penalty) {
     else{
         cr += mod
     }
-    
+
 	var xpBudget = getXPForCR(cr);
 	var included;
 	
