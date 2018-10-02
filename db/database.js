@@ -80,9 +80,24 @@ function loadItems() {
     });
 }
 
-function generateEncounter(location, cr, msg, include, penalty) {
+function generateEncounter(location, apl, mod, msg, include, penalty) {
 	var encounter = [];
-	var list = {};
+    var list = {};
+    var cr = apl;
+    if(!mod)
+    {
+        let roll = Math.random(5) + 1
+        if(roll == 4)
+            roll = -1;
+        if(roll == 5)
+            roll = -2
+
+        cr += roll
+    }
+    else{
+        cr += mod
+    }
+    
 	var xpBudget = getXPForCR(cr);
 	var included;
 	
