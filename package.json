@@ -1,0 +1,19 @@
+{
+  "name": "lamashtu",
+  "version": "1.0.0",
+  "description": "A node.js discord bot to facilitate tabletop rpg gameplay",
+  "main": "lamashtuBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Robert Wolfe",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "discord.js": "^11.4.2",
+    "flat-file-db": "^1.0.0",
+    "jsonfile": "^4.0.0",
+    "morgan": "^1.9.0",
+    "request": "^2.88.0"
+  }
+}
