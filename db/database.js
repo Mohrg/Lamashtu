@@ -29,6 +29,7 @@ function loadLocations() {
 }
 
 function checkMonsters() {
+	console.log("Checking monsters");
     var locationLength = Object.keys(locations).length;
     var cur = 1;
     var location, monster;
@@ -45,34 +46,62 @@ function checkMonsters() {
             }
         }
     }
-
+   
+    assignMonsters();
 }
 
 function writeMonsters() {
     console.log("Writing");
-    jsonfile.writeFile('./data/monsters.js', monsters, { spaces: 4 }, loadItems);
+    jsonfile.writeFile('../data/monsters.js', monsters, { spaces: 4 }, loadItems);
 }
 
-/*
 function assignMonsters() {
+	console.log("Assigning monsters to locations");
     for (var key in monsters) {
         let monster = monsters[key];
 
         monster.locations.forEach(function (monsterLocation) {
-            if(locations[monsterLocation])
+            if(locations[monsterLocation]){
+            	console.log("Adding monster " + monster.name + " to " + locations[monsterLocation]);
                 locations[monsterLocation].monsters.push(monster.name);
+            	console.log(locations[monsterLocation]);
+
+            }
             else
-            console.log("error, location doesn't exist " + monsterLocation);
+            	locations[monsterLocation] = {name : monsterLocation, monsters : [monster.name]};
         });
     }
+    cleanLocations();
+}
 
+function cleanLocations() {
+	console.log("Cleaning locations");
+	for(var key in locations) {
+		let location = locations[key];
+		let remove = [];
+		console.log("Searching " + location.name)
+		
+		for(var monKey in location.monsters){
+			console.log("Checking " + location.monsters[monKey] + " in " + location.name)
+			if(monsters[location.monsters[monKey]].locations.indexOf(location.name) == null){
+				console.log("Monster " + location.monsters[monKey] + " not found, removing");
+				remove.push(location.monsters[monKey]);
+			}
+		}
+		for(var loc in remove) {
+			location.monsters.splice(location.monsters.indexOf(remove[loc]), 1);
+			console.log("Removing " + remove[loc] + " from " + location.name);
+		}
+	}
+	
     writeLocations();
+
 }
 
 function writeLocations() {
-    jsonfile.writeFile('./data/locations.js', locations,{spaces: 4}, loadItems);
+    jsonfile.writeFile('../data/locations.js', locations,{spaces: 4}, loadItems);
 }
-*/
+
 
 function loadItems() {
     jsonfile.readFile("./data/items.js", function (err, obj) {
@@ -265,7 +294,8 @@ function getMonster(name, cb) {
                 monsters[name] = {
                     name: name,
                     cr: cr,
-                    xp: xp
+                    xp: xp,
+                    locations: []
                 }
             }
             else {
