@@ -1,7 +1,11 @@
 const Discord = require('discord.js');
 
 const client = new Discord.Client();
+var token = require("../config/discord.js");
 var db = require('../db/database.js');
+
+const nameRegex = /([\w\s]*)\sCR\s(\d*)/;
+
 
 client.once('ready', () => {
     console.log("Lamashtu ready for your commands, master.")
@@ -18,4 +22,4 @@ client.on('message', message => {
 
 
 
-client.login('NDg1NTMzMDMxODM5MzAxNjUy.Dmx_HA.mMq4Su-IFDHhfpbdhFf1L2IRr2M');
+client.login(token);
